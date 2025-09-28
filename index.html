@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Build on Rialo - Blockchain Adventure</title>
+    <style>
+        body {
+            box-sizing: border-box;
+            font-family: 'Orbitron', 'Courier New', monospace;
+            background: #0a0a0f;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            color: #00ff88;
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(0, 255, 136, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(0, 191, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(138, 43, 226, 0.1) 0%, transparent 50%);
+            z-index: -2;
+        }
+        
+        .matrix-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.1;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: #00ff88;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        
+        .matrix-column {
+            position: absolute;
+            top: -100%;
+            white-space: nowrap;
+            animation: matrix-fall linear infinite;
+        }
+        
+        @keyframes matrix-fall {
+            to {
+                transform: translateY(100vh);
+            }
+        }
+        
+        .game-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ff88;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 
+                0 0 30px rgba(0, 255, 136, 0.3),
+                inset 0 0 30px rgba(0, 255, 136, 0.1);
+            position: relative;
+            backdrop-filter: blur(10px);
+        }
+        
+        .game-container::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #00ff88, #00bfff, #8a2be2, #00ff88);
+            border-radius: 15px;
+            z-index: -1;
+            animation: border-glow 3s ease-in-out infinite alternate;
+        }
+        
+        @keyframes border-glow {
+            0% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .title {
+            text-align: center;
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #00ff88;
+            text-shadow: 
+                0 0 10px #00ff88,
+                0 0 20px #00ff88,
+                0 0 30px #00ff88;
+            font-family: 'Orbitron', monospace;
+            letter-spacing: 3px;
+            animation: title-pulse 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes title-pulse {
+            0% { 
+                text-shadow: 
+                    0 0 10px #00ff88,
+                    0 0 20px #00ff88,
+                    0 0 30px #00ff88;
+            }
+            100% { 
+                text-shadow: 
+                    0 0 20px #00ff88,
+                    0 0 30px #00ff88,
+                    0 0 40px #00ff88;
+            }
+        }
+        
+        .subtitle {
+            text-align: center;
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid #00bfff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 0 20px rgba(0, 191, 255, 0.2);
+        }
+        
+        .stat {
+            text-align: center;
+            position: relative;
+            padding: 10px;
+        }
+        
+        .stat::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            background: linear-gradient(45deg, #00ff88, #00bfff) border-box;
+            -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: exclude;
+            opacity: 0.3;
+        }
+        
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: #00bfff;
+            text-shadow: 0 0 10px #00bfff;
+            font-family: 'Orbitron', monospace;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #00ff88;
+            margin-top: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .game-content {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            min-height: 200px;
+        }
+        
+        .challenge {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .choices {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .choice-btn {
+            flex: 1;
+            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ff88;
+            border-radius: 8px;
+            color: #00ff88;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Orbitron', monospace;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .choice-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 136, 0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .choice-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 
+                0 0 20px rgba(0, 255, 136, 0.5),
+                inset 0 0 20px rgba(0, 255, 136, 0.1);
+            border-color: #00bfff;
+            color: #00bfff;
+        }
+        
+        .choice-btn:hover::before {
+            left: 100%;
+        }
+        
+        .choice-btn:active {
+            transform: translateY(0);
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+        
+        .result.success {
+            background: rgba(34, 197, 94, 0.2);
+            border: 2px solid #22c55e;
+        }
+        
+        .result.failure {
+            background: rgba(239, 68, 68, 0.2);
+            border: 2px solid #ef4444;
+        }
+        
+        .result.event {
+            background: rgba(168, 85, 247, 0.2);
+            border: 2px solid #a855f7;
+        }
+        
+        .start-btn, .restart-btn {
+            display: block;
+            width: 200px;
+            margin: 20px auto;
+            padding: 15px 30px;
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            color: #333;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
+        }
+        
+        .start-btn:hover, .restart-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.4);
+        }
+        
+        .intro {
+            text-align: center;
+            line-height: 1.6;
+            font-size: 1.1rem;
+        }
+        
+        .final-message {
+            text-align: center;
+            font-size: 1.2rem;
+            line-height: 1.6;
+        }
+        
+        .rialo-link {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            color: #ffd700;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .rialo-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+        
+        @media (max-width: 768px) {
+            .choices {
+                flex-direction: column;
+            }
+            
+            .stats {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .title {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="matrix-bg" id="matrixBg"></div>
+    <div class="game-container">
+        <h1 class="title">Build on Rialo</h1>
+        <p class="subtitle">An Adventure in the Real-World Blockchain</p>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value" id="health">100</div>
+                <div class="stat-label">Stamina</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="assets">0</div>
+                <div class="stat-label">RWAs Collected</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="level">1</div>
+                <div class="stat-label">Level</div>
+            </div>
+        </div>
+        
+        <div class="game-content" id="gameContent">
+            <div class="intro">
+                <p>Welcome to the Rialo ecosystem! You are a builder with one goal: Deploy a killer dApp, integrate real-world assets (RWAs), and avoid common Web3 pitfalls.</p>
+                <p>Rialo makes it seamless with built-in oracles, bridges, and sub-second latency. Let's see if you can rethink and rebuild!</p>
+                <button class="start-btn" onclick="startGame()">Start Adventure</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Matrix background animation
+        function createMatrixEffect() {
+            const matrixBg = document.getElementById('matrixBg');
+            const chars = '01RIALO{}[]()<>+-*/=!@#$%^&*';
+            
+            for (let i = 0; i < 15; i++) {
+                const column = document.createElement('div');
+                column.className = 'matrix-column';
+                column.style.left = Math.random() * 100 + '%';
+                column.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                column.style.animationDelay = Math.random() * 2 + 's';
+                
+                let text = '';
+                for (let j = 0; j < 20; j++) {
+                    text += chars[Math.floor(Math.random() * chars.length)] + '<br>';
+                }
+                column.innerHTML = text;
+                
+                matrixBg.appendChild(column);
+            }
+        }
+        
+        createMatrixEffect();
+
+        let gameState = {
+            health: 100,
+            assets: 0,
+            level: 1,
+            gameStarted: false,
+            gameEnded: false
+        };
+
+        const challenges = {
+            1: {
+                text: "Challenge: Integrate real-world data. Do you use Rialo's native oracle for fast HTTPS calls, or rely on external middleware?",
+                choice1: "Use Rialo's native oracle",
+                choice2: "Rely on external middleware",
+                result1: {
+                    text: "Smart choice! Rialo's built-in oracle delivers <100ms latency. You gain an RWA (tokenized stock ticker).",
+                    healthChange: 10,
+                    assetsChange: 1,
+                    success: true
+                },
+                result2: {
+                    text: "Oops! Middleware adds fragmentation and delays. You lose stamina.",
+                    healthChange: -20,
+                    assetsChange: 0,
+                    success: false
+                }
+            },
+            2: {
+                text: "Challenge: Handle scalability. Do you leverage Rialo's infinite scalability and event-driven logic, or stick with a fragmented L1?",
+                choice1: "Leverage Rialo's supermodular design",
+                choice2: "Stick with fragmented L1",
+                result1: {
+                    text: "Excellent! Rialo's supermodular design handles 100k+ tickers/sec. You collect a music royalty RWA.",
+                    healthChange: 10,
+                    assetsChange: 1,
+                    success: true
+                },
+                result2: {
+                    text: "Fragmentation hurts! Liquidity and innovation suffer. Stamina drain.",
+                    healthChange: -30,
+                    assetsChange: 0,
+                    success: false
+                }
+            },
+            3: {
+                text: "Final Challenge: Secure your dApp. Do you use Rialo's identity-based encryption and threshold MPC, or go without privacy features?",
+                choice1: "Use Rialo's security features",
+                choice2: "Go without privacy features",
+                result1: {
+                    text: "Secure win! Your dApp launches on Rialo's Apex Network, invisible infrastructure, fully integrated with real life.",
+                    healthChange: 0,
+                    assetsChange: 1,
+                    success: true,
+                    victory: true
+                },
+                result2: {
+                    text: "Insecure move! Hacks and opacity strike. Game over.",
+                    healthChange: -50,
+                    assetsChange: 0,
+                    success: false
+                }
+            }
+        };
+
+        function updateStats() {
+            document.getElementById('health').textContent = gameState.health;
+            document.getElementById('assets').textContent = gameState.assets;
+            document.getElementById('level').textContent = gameState.level;
+        }
+
+        function startGame() {
+            gameState = { health: 100, assets: 0, level: 1, gameStarted: true, gameEnded: false };
+            updateStats();
+            showChallenge();
+        }
+
+        function showChallenge() {
+            if (gameState.level > 3 || gameState.health <= 0) {
+                endGame();
+                return;
+            }
+
+            const challenge = challenges[gameState.level];
+            const content = document.getElementById('gameContent');
+            
+            content.innerHTML = `
+                <div class="challenge">
+                    <strong>Level ${gameState.level}:</strong><br>
+                    ${challenge.text}
+                </div>
+                <div class="choices">
+                    <button class="choice-btn" onclick="makeChoice(1)">${challenge.choice1}</button>
+                    <button class="choice-btn" onclick="makeChoice(2)">${challenge.choice2}</button>
+                </div>
+            `;
+        }
+
+        function makeChoice(choice) {
+            const challenge = challenges[gameState.level];
+            const result = choice === 1 ? challenge.result1 : challenge.result2;
+            
+            gameState.health += result.healthChange;
+            gameState.assets += result.assetsChange;
+            
+            if (gameState.health < 0) gameState.health = 0;
+            
+            updateStats();
+            
+            const content = document.getElementById('gameContent');
+            const resultClass = result.success ? 'success' : 'failure';
+            
+            let resultHTML = `
+                <div class="challenge">
+                    <strong>Level ${gameState.level}:</strong><br>
+                    ${challenge.text}
+                </div>
+                <div class="result ${resultClass}">
+                    ${result.text}
+                </div>
+            `;
+
+            // Random event
+            if (Math.random() < 0.3 && gameState.health > 0 && !result.victory) {
+                gameState.health += 5;
+                updateStats();
+                resultHTML += `
+                    <div class="result event">
+                        Random Event: A wild 'gas spike' appears! But Rialo's stable gas saves you – gain 5 stamina.
+                    </div>
+                `;
+            }
+
+            if (result.victory) {
+                resultHTML += `
+                    <div class="final-message">
+                        <h3>🎉 Victory! 🎉</h3>
+                        <p>You deployed successfully with ${gameState.assets} RWAs. Rialo rethinks blockchain for real builders.</p>
+                        <a href="https://www.rialo.io/" target="_blank" rel="noopener noreferrer" class="rialo-link">
+                            Check out @RialoHQ →
+                        </a>
+                        <br>
+                        <button class="restart-btn" onclick="startGame()">Play Again</button>
+                    </div>
+                `;
+                content.innerHTML = resultHTML;
+                return;
+            }
+
+            if (gameState.health <= 0) {
+                resultHTML += `
+                    <div class="final-message">
+                        <h3>💥 Game Over! 💥</h3>
+                        <p>Final RWAs: ${gameState.assets}. Try again to master Rialo!</p>
+                        <a href="https://www.rialo.io/" target="_blank" rel="noopener noreferrer" class="rialo-link">
+                            Check out @RialoHQ →
+                        </a>
+                        <br>
+                        <button class="restart-btn" onclick="startGame()">Try Again</button>
+                    </div>
+                `;
+                content.innerHTML = resultHTML;
+                return;
+            }
+
+            resultHTML += `
+                <button class="choice-btn" onclick="nextLevel()" style="margin-top: 20px; width: 200px; margin-left: auto; margin-right: auto; display: block;">
+                    Continue to Level ${gameState.level + 1}
+                </button>
+            `;
+            
+            content.innerHTML = resultHTML;
+        }
+
+        function nextLevel() {
+            gameState.level++;
+            showChallenge();
+        }
+
+        function endGame() {
+            const content = document.getElementById('gameContent');
+            content.innerHTML = `
+                <div class="final-message">
+                    <h3>Game Complete!</h3>
+                    <p>Final RWAs: ${gameState.assets}. Thanks for playing!</p>
+                    <a href="https://www.rialo.io/" target="_blank" rel="noopener noreferrer" class="rialo-link">
+                        Check out @RialoHQ →
+                    </a>
+                    <br>
+                    <button class="restart-btn" onclick="startGame()">Play Again</button>
+                </div>
+            `;
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9860ada93252da6d',t:'MTc1OTAzNTYzOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
